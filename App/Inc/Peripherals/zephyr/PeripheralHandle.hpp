@@ -3,6 +3,6 @@
 
 using PeripheralHandle = const struct device;
 
-PeripheralHandle* GetUart1Handle();
-PeripheralHandle* GetUart2Handle();
-PeripheralHandle* GetUart3Handle();
+[[nodiscard]] PeripheralHandle* GetUart1Handle();
+[[nodiscard]] PeripheralHandle* GetUart2Handle();
+[[nodiscard]] PeripheralHandle* GetUart3Handle();

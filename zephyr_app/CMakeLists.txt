@@ -9,7 +9,6 @@ target_sources(app PRIVATE
     ../App/Src/HardwareInit.cpp
     ../App/Src/Peripherals/zephyr/UartPeripheral.cpp
     ../App/Src/Peripherals/zephyr/PeripheralHandles.cpp
-    ../App/Src/Tasks/Task.cpp
 )
 
 target_include_directories(app PRIVATE

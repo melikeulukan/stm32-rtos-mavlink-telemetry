@@ -4,20 +4,17 @@
 #include <cstdint>
 #include <cstddef>
 #include <array>
+#include <span>
 #include "mavlink/custom/mavlink.h"
 #include "mavlink/custom/mavlink_msg_mission_telemetry.h"
 #include "mavlink/mavlink_types.h"
 #include "MavlinkDummyData.hpp"
 
-#if defined(RTOS_BACKEND_ZEPHYR)
-#include <zephyr/kernel.h>
-K_THREAD_STACK_DEFINE(mavlink_tx_stack, 256 * sizeof(uint32_t));
-#endif
-
 template<typename Transport>
 
-class MavlinkTxTask : public Task {
+class MavlinkTxTask : public Task<256 * sizeof(uint32_t)> {
     private:
+        using Base = Task<256 * sizeof(uint32_t)>;
         Transport& transport_;
         std::array<uint8_t, MAVLINK_MAX_PACKET_LEN> mavBuf_{};
         mavlink_message_t msg_{};
@@ -27,19 +24,11 @@ class MavlinkTxTask : public Task {
 
     public:
         explicit MavlinkTxTask(Transport& transport)
-            : Task("MavlinkTxTask", osPriorityNormal), transport_(transport){
+            : Base("MavlinkTxTask", osPriorityNormal), transport_(transport){
 
         }
 
-constexpr auto melike_size{256};
 
-#if defined(RTOS_BACKEND_ZEPHYR)
-        void start() { startWithStack(melike_size, K_THREAD_STACK_SIZEOF(mavlink_tx_stack)); }
-#elif defined(RTOS_BACKEND_FREERTOS)
-        void start() { startDynamic(melike_size * sizeof(uint32_t)); }
-#endif
-
-start(melike_size);
         void operator()() override {
             constexpr std::size_t kDatasetSize = std::size(dummy_dataset);
             printf("tx task running\r\n");
@@ -47,7 +36,7 @@ start(melike_size);
             while (true) {
                 mavlink_msg_mission_telemetry_encode(kSystemId, kComponentId, &msg_, &dummy_dataset[idx_]);
                 auto len = mavlink_msg_to_send_buffer(mavBuf_.data(), &msg_);
-                transport_.send(mavBuf_.data(), len);
+                transport_.send(std::span<const uint8_t>(mavBuf_.data(), len));
 
                 IndicateTxActivity();
                 idx_ = (idx_ + 1) % kDatasetSize;

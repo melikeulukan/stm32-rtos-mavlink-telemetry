@@ -2,6 +2,7 @@
 #include "UartPeripheral.hpp"
 #include "cmsis_os2.h"
 #include <cstddef>
+#include <span>
 
 class UartSendTransport : public UartPeripheral {
     public:
@@ -9,9 +10,9 @@ class UartSendTransport : public UartPeripheral {
             : UartPeripheral(huart), txDoneSem_(txDoneSem) {
         }
 
-        void send(const uint8_t* data, std::size_t len)
+        void send(std::span<const uint8_t> data)
         {
-            transmitDma(data, len);
+            transmitDma(data);
             osSemaphoreAcquire(txDoneSem_, osWaitForever);
         }
 

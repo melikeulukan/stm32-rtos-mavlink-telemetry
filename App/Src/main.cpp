@@ -1,14 +1,4 @@
-
-#if defined(RTOS_BACKEND_FREERTOS)
-#include "main.h"
-#endif
-
 #include "cmsis_os2.h"
-
-#if defined(RTOS_BACKEND_FREERTOS)
-#include "FreeRTOS.h"
-#include "task.h"
-#endif
 
 #include "PeripheralHandle.hpp"
 #include "HardwareInit.hpp"
@@ -22,33 +12,11 @@
 #include <string.h>
 #include <stdio.h>
 
-#if defined(RTOS_BACKEND_ZEPHYR)
-#include <zephyr/kernel.h>
-
-K_THREAD_STACK_DEFINE(test_stack, 1024);
-static struct k_thread test_thread_data;
-
-static void test_thread_fn(void*, void*, void*)
-{
-    printf("NATIVE THREAD RUNNING\r\n");
-    while (1) { k_msleep(1000); }
-}
-#endif
-
 int main(void)
 {
   printf("boot ok\r\n");
   HardwareInit_Run();
-
-  #if defined(RTOS_BACKEND_ZEPHYR)
-  k_thread_create(&test_thread_data, test_stack, K_THREAD_STACK_SIZEOF(test_stack),
-                   test_thread_fn, NULL, NULL, NULL, 5, 0, K_NO_WAIT);
-  printf("native thread created\r\n");
-  #endif
-
-  #if defined(RTOS_BACKEND_FREERTOS)
-  osKernelInitialize();
-  #endif
+  ActiveOs::InitializeKernel();
 
   auto txDoneSemHandle = osSemaphoreNew(1, 0, nullptr);
   printf("sem: %p\r\n", (void*)txDoneSemHandle);
@@ -72,10 +40,7 @@ int main(void)
   mavlinkRxTask.start();
   printf("rx task started\r\n");
 
-  #if defined(RTOS_BACKEND_FREERTOS)
-  osKernelStart();
-  #endif
-
+  ActiveOs::StartKernel();
   osDelay(osWaitForever);
 }
 

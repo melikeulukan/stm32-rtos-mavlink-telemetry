@@ -43,7 +43,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     App/Src/HardwareInit.cpp
     App/Src/Peripherals/freertos/UartPeripheral.cpp
     App/Src/Peripherals/freertos/PeripheralHandles.cpp
-    App/Src/Tasks/Task.cpp
+
 )
 
 # Add include paths

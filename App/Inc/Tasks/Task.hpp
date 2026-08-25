@@ -1,27 +1,36 @@
 #pragma once
-#include "cmsis_os2.h"
+#include "Os/ActiveOs.hpp"
+#include <cstddef>
 #include <cstdint>
-template<typename OS>
+
+template<std::size_t StackBytes>
+
 class Task{
     public:
-        explicit Task(const char* name, osPriority_t priority);
+        explicit Task(const char* name, ActiveOs::Priority priority)
+            : name_(name), priority_(priority){
+        }
         virtual ~Task() = default;
 
         Task(const Task&) = delete; //copy constructor disabled
         Task& operator=(const Task&) = delete; //copy assignment operator disabled
         virtual void operator()()=0; //Pure Virtual Function
 
-        void start(){
-            OS.start(size);
+        void start()
+        {
+            handle_ = ActiveOs::CreateThread<StackBytes>(name_,
+                 priority_, &trampoline, this);
         }
-    protected:
-        void startDynamic(std::size_t stackBytes);
-        void startWithStack(void * stackMem, std::size_t stackBytes);
-        
+
     private:
         const char* name_;
-        osPriority_t priority_;
-        osThreadId_t handle_{nullptr};
+        ActiveOs::Priority priority_;
+        ActiveOs::ThreadHandle handle_{};
 
-        static void trampoline(void* argument);
+        static void trampoline(void* argument)
+        {
+            auto* self = static_cast<Task*>(argument);
+            if (self != nullptr) { (*self)(); }
+            ActiveOs::TerminateCurrentThread();
+        }
 };

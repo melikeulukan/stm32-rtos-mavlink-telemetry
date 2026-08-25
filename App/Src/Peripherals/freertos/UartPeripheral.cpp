@@ -56,14 +56,14 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
     }
 }
 
-void UartPeripheral::transmitDma(const uint8_t* data, std::size_t len)
+void UartPeripheral::transmitDma(std::span<const uint8_t> data)
 {
-    HAL_UART_Transmit_DMA(huart_->huart, data, static_cast<uint16_t>(len));
+    HAL_UART_Transmit_DMA(huart_->huart, data.data(), static_cast<uint16_t>(data.size()));
 }
 
-void UartPeripheral::receiveDma(uint8_t* buffer, std::size_t len)
+void UartPeripheral::receiveDma(std::span<uint8_t> buffer)
 {
-    HAL_UARTEx_ReceiveToIdle_DMA(huart_->huart, buffer, len);
+    HAL_UARTEx_ReceiveToIdle_DMA(huart_->huart, buffer.data(), static_cast<uint16_t>(buffer.size()));
     if (huart_->hdma) __HAL_DMA_DISABLE_IT(huart_->hdma, DMA_IT_HT);
 }
 

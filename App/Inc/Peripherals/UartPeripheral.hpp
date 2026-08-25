@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <array>
+#include <span>
 
 class UartPeripheral {
     public:
@@ -25,10 +26,10 @@ class UartPeripheral {
     protected:
         HalHandle* huart_;
 
-        void transmitDma(const uint8_t* data, std::size_t len);
+        void transmitDma(std::span<const uint8_t> data);
 
-        void receiveDma(uint8_t* buffer, std::size_t len);
-            
+        void receiveDma(std::span<uint8_t> buffer);
+
         void stopDma();
 
     private:

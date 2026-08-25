@@ -1,5 +1,6 @@
 #pragma once
 #include "UartPeripheral.hpp"
+#include <span>
 
 #if defined(RTOS_BACKEND_ZEPHYR)
 #include <zephyr/drivers/uart.h>
@@ -11,14 +12,14 @@ class UartBlockingSendTransport : public UartPeripheral {
             : UartPeripheral(huart) {
         }
 
-        void send(const uint8_t* data, std::size_t len)
+        void send(std::span<const uint8_t> data)
         {
 #if defined(RTOS_BACKEND_FREERTOS)
-            HAL_UART_Transmit(huart_->huart, data, static_cast<uint16_t>(len), HAL_MAX_DELAY);
+            HAL_UART_Transmit(huart_->huart, data.data(), static_cast<uint16_t>(data.size()), HAL_MAX_DELAY);
 #elif defined(RTOS_BACKEND_ZEPHYR)
-            for (std::size_t i = 0; i < len; ++i)
+            for (auto byte : data)
             {
-                uart_poll_out(huart_, data[i]);
+                uart_poll_out(huart_, byte);
             }
 #endif
         }

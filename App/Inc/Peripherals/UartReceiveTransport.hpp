@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <span>
 
 template<std::size_t N>
 using Buffer = std::array<std::uint8_t, N>;
@@ -18,7 +19,7 @@ class UartReceiveTransport : public UartPeripheral {
         // Ilk dinlemeyi baslatir, rxQueue olusturulduktan sonra, bir kere cagrilir.
         void startListening()
         {
-            receiveDma(dmaBuffer_.data(), dmaBuffer_.size());
+            receiveDma(dmaBuffer_);
         }
 
         // Bir sonraki paket gelene kadar bloklar.
@@ -27,6 +28,7 @@ class UartReceiveTransport : public UartPeripheral {
             osMessageQueueGet(rxQueue_, &outLen, nullptr, osWaitForever);
             return packet_.data();
         }
+
 
     private:
         void onRxEvent(uint16_t size) override
@@ -42,7 +44,7 @@ class UartReceiveTransport : public UartPeripheral {
 
             osMessageQueuePut(rxQueue_, &size, 0, 0);
 
-            receiveDma(dmaBuffer_.data(), dmaBuffer_.size());
+            receiveDma(dmaBuffer_);
         }
 
         osMessageQueueId_t rxQueue_;

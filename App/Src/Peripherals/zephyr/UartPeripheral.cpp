@@ -27,17 +27,17 @@ UartPeripheral::UartPeripheral(HalHandle* huart) : huart_(huart)
 }
 
 // TX
-void UartPeripheral::transmitDma(const uint8_t* data, std::size_t len)
+void UartPeripheral::transmitDma(std::span<const uint8_t> data)
 {
-    uart_tx(huart_, data, len, SYS_FOREVER_US);
+    uart_tx(huart_, data.data(), data.size(), SYS_FOREVER_US);
 }
 
 // RX
-void UartPeripheral::receiveDma(uint8_t* buffer, std::size_t len)
+void UartPeripheral::receiveDma(std::span<uint8_t> buffer)
 {
     // timeout (us): HAL'in "ReceiveToIdle" davranisina karsilik gelen bosluk suresi.
-    // 10000 (10ms) baslangic degeri - protokole gore ayarlanabilir.
-    uart_rx_enable(huart_, buffer, len, 0);
+    // 0: idle algilanir algilanmaz aninda bildirir.
+    uart_rx_enable(huart_, buffer.data(), buffer.size(), 0);
 }
 
 void UartPeripheral::stopDma()

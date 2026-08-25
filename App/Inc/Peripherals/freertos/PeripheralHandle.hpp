@@ -6,6 +6,6 @@ struct PeripheralHandle {
     DMA_HandleTypeDef* hdma;   // only for rx
 };
 
-PeripheralHandle* GetUart1Handle();
-PeripheralHandle* GetUart2Handle();
-PeripheralHandle* GetUart3Handle();
+[[nodiscard]] PeripheralHandle* GetUart1Handle();
+[[nodiscard]] PeripheralHandle* GetUart2Handle();
+[[nodiscard]] PeripheralHandle* GetUart3Handle();
