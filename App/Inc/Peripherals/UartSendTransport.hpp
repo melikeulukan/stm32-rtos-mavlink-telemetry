@@ -5,7 +5,7 @@
 
 class UartSendTransport : public UartPeripheral {
     public:
-        UartSendTransport(UART_HandleTypeDef* huart, osSemaphoreId_t txDoneSem)
+        UartSendTransport(UartPeripheral::HalHandle* huart, osSemaphoreId_t txDoneSem)
             : UartPeripheral(huart), txDoneSem_(txDoneSem) {
         }
 

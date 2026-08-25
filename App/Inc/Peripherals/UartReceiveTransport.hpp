@@ -11,15 +11,14 @@ using Buffer = std::array<std::uint8_t, N>;
 
 class UartReceiveTransport : public UartPeripheral {
     public:
-        UartReceiveTransport(UartPeripheral::HalHandle* huart, DMA_HandleTypeDef* hdma, osMessageQueueId_t rxQueue)
-            : UartPeripheral(huart), hdma_(hdma), rxQueue_(rxQueue) {
+        UartReceiveTransport(UartPeripheral::HalHandle* huart, osMessageQueueId_t rxQueue)
+            : UartPeripheral(huart), rxQueue_(rxQueue) {
         }
 
         // Ilk dinlemeyi baslatir, rxQueue olusturulduktan sonra, bir kere cagrilir.
         void startListening()
         {
             receiveDma(dmaBuffer_.data(), dmaBuffer_.size());
-            disableHalfTransferIt();
         }
 
         // Bir sonraki paket gelene kadar bloklar.
@@ -44,15 +43,8 @@ class UartReceiveTransport : public UartPeripheral {
             osMessageQueuePut(rxQueue_, &size, 0, 0);
 
             receiveDma(dmaBuffer_.data(), dmaBuffer_.size());
-            disableHalfTransferIt();
         }
 
-        void disableHalfTransferIt()
-        {
-            __HAL_DMA_DISABLE_IT(hdma_, DMA_IT_HT);
-        }
-
-        DMA_HandleTypeDef* hdma_;
         osMessageQueueId_t rxQueue_;
         Buffer<128> dmaBuffer_{};
         Buffer<128> packet_{};

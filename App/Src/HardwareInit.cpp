@@ -1,10 +1,15 @@
 #include "HardwareInit.hpp"
+
+#if defined(RTOS_BACKEND_FREERTOS)
+
 #include "main.h"
 
-extern RTC_HandleTypeDef hrtc;
-extern UART_HandleTypeDef huart1;
-extern UART_HandleTypeDef huart2;
-extern UART_HandleTypeDef huart3;
+RTC_HandleTypeDef hrtc;
+UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart2;
+UART_HandleTypeDef huart3;
+DMA_HandleTypeDef hdma_usart1_tx;
+DMA_HandleTypeDef hdma_usart2_rx;
 
 static void SystemClock_Config()
 {
@@ -166,6 +171,7 @@ static void MX_GPIO_Init()
 
 void HardwareInit_Run()
 {
+  HAL_Init();
   SystemClock_Config();
 
   MX_GPIO_Init();
@@ -175,3 +181,10 @@ void HardwareInit_Run()
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
 }
+
+#elif defined(RTOS_BACKEND_ZEPHYR)
+
+// Zephyr peripheral'ları devicetree uzerinden kendi init sirasinda otomatik ayaga kaldirir.
+void HardwareInit_Run() {}
+
+#endif

@@ -1,72 +1,85 @@
 
+#if defined(RTOS_BACKEND_FREERTOS)
 #include "main.h"
-#include "cmsis_os.h"
+#endif
 
+#include "cmsis_os2.h"
+
+#if defined(RTOS_BACKEND_FREERTOS)
+#include "FreeRTOS.h"
 #include "task.h"
+#endif
 
-#include "PeripheralHandles.hpp"
+#include "Peripherals/PeripheralHandles.hpp"
 #include "HardwareInit.hpp"
 #include "Peripherals/UartPeripheral.hpp"
 #include "Peripherals/UartSendTransport.hpp"
 #include "Peripherals/UartReceiveTransport.hpp"
-#include "Tasks/DefaultTask.hpp"
-#include "Tasks/TxTask.hpp"
+#include "Peripherals/UartBlockingSendTransport.hpp"
 #include "Tasks/MavlinkTxTask.hpp"
-
-#include "Tasks/RxTask.hpp"
 #include "Tasks/MavlinkRxTask.hpp"
 
 #include <string.h>
 #include <stdio.h>
 
+#if defined(RTOS_BACKEND_ZEPHYR)
+#include <zephyr/kernel.h>
+
+K_THREAD_STACK_DEFINE(test_stack, 1024);
+static struct k_thread test_thread_data;
+
+static void test_thread_fn(void*, void*, void*)
+{
+    printf("NATIVE THREAD RUNNING\r\n");
+    while (1) { k_msleep(1000); }
+}
+#endif
+
 int main(void)
 {
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
-
-  /* Clock config + GPIO/DMA/RTC/USART bring-up */
+  printf("boot ok\r\n");
   HardwareInit_Run();
 
-  /* Init scheduler */
+  #if defined(RTOS_BACKEND_ZEPHYR)
+  k_thread_create(&test_thread_data, test_stack, K_THREAD_STACK_SIZEOF(test_stack),
+                   test_thread_fn, NULL, NULL, NULL, 5, 0, K_NO_WAIT);
+  printf("native thread created\r\n");
+  #endif
+
+  #if defined(RTOS_BACKEND_FREERTOS)
   osKernelInitialize();
+  #endif
 
   auto txDoneSemHandle = osSemaphoreNew(1, 0, nullptr);
-
-  if (txDoneSemHandle == nullptr)
-  {
-     HAL_GPIO_WritePin(GPIOB, LD1_Pin|LD2_Pin|LD3_Pin, GPIO_PIN_SET);
-  }
+  printf("sem: %p\r\n", (void*)txDoneSemHandle);
 
   auto rxQueueHandle = osMessageQueueNew(8, sizeof(uint16_t), nullptr);
-  //Capacity: 8 messages, Size, Attr: default memory allocation
+  printf("msgq: %p\r\n", (void*)rxQueueHandle);
 
-  if (rxQueueHandle == nullptr)
-  {
-    HAL_GPIO_WritePin(GPIOB, LD1_Pin|LD2_Pin|LD3_Pin, GPIO_PIN_SET);
-  }
+  static UartSendTransport uart1(GetUart1Handle(), txDoneSemHandle);
+  static UartReceiveTransport uart2(GetUart2Handle(), rxQueueHandle);
+  static UartBlockingSendTransport debugUart(GetUart3Handle());
+  printf("transports ok\r\n");
 
-  static UartSendTransport uart1(&huart1, txDoneSemHandle);
-  static UartReceiveTransport uart2(&huart2, &hdma_usart2_rx, rxQueueHandle);
   uart2.startListening();
+  printf("listening ok\r\n");
 
-  //static DefaultTask defaultTask; // static olmalı, yoksa main() bittiğinde yok olur
-  //static TxTask<UartSendTransport> txTask(uart1);
   static MavlinkTxTask<UartSendTransport> mavlinkTxTask(uart1);
-  //static RxTask<UartReceiveTransport> rxTask(uart2, &huart3);
-  static MavlinkRxTask<UartReceiveTransport> mavlinkRxTask(uart2, &huart3);
+  static MavlinkRxTask<UartReceiveTransport, UartBlockingSendTransport> mavlinkRxTask(uart2, debugUart);
 
-  //defaultTask.start();
-  //txTask.start();
   mavlinkTxTask.start();
-  //rxTask.start();
+  printf("tx task started\r\n");
   mavlinkRxTask.start();
+  printf("rx task started\r\n");
 
-  /* Start scheduler */
+  #if defined(RTOS_BACKEND_FREERTOS)
   osKernelStart();
+  #endif
 
-  /* We should never get here as control is now taken by the scheduler */
-
+  osDelay(osWaitForever);
 }
+
+#if defined(RTOS_BACKEND_FREERTOS)
 
 void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
 {
@@ -114,3 +127,5 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
+
+#endif // RTOS_BACKEND_FREERTOS

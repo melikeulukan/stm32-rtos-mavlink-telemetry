@@ -1,18 +1,21 @@
 #pragma once
 #include "Task.hpp"
-#include "main.h"
-#include "task.h"
+#include "DebugLeds.hpp"
 #include "mavlink/custom/mavlink.h"
 #include "mavlink/custom/mavlink_msg_mission_telemetry.h"
 #include <cstdio>
 #include <array>
 
+#if defined(RTOS_BACKEND_ZEPHYR)
+#include <zephyr/kernel.h>
+K_THREAD_STACK_DEFINE(mavlink_rx_stack, 512 * sizeof(uint32_t));
+#endif
 
-template<typename Transport>
+template<typename Transport, typename DebugTransport>
 class MavlinkRxTask : public Task {
     private:
         Transport& transport_;
-        UART_HandleTypeDef* debugUart_;
+        DebugTransport& debugTransport_;
         uint32_t rxCounter_{0};
 
         mavlink_message_t msg_{};
@@ -22,10 +25,16 @@ class MavlinkRxTask : public Task {
         std::array<char, 64> unknownMsg_{};
 
     public:
-        explicit MavlinkRxTask(Transport& transport, UART_HandleTypeDef* debugUart)
-            : Task("MavlinkRxTask", 512, osPriorityAboveNormal), transport_(transport), debugUart_(debugUart) {
+        explicit MavlinkRxTask(Transport& transport, DebugTransport& debugTransport)
+            : Task("MavlinkRxTask", osPriorityAboveNormal), transport_(transport), debugTransport_(debugTransport) {
 
         }
+
+#if defined(RTOS_BACKEND_ZEPHYR)
+        void start() { startWithStack(mavlink_rx_stack, K_THREAD_STACK_SIZEOF(mavlink_rx_stack)); }
+#elif defined(RTOS_BACKEND_FREERTOS)
+        void start() { startDynamic(512 * sizeof(uint32_t)); }
+#endif
 
         void operator()() override {
 
@@ -44,8 +53,8 @@ class MavlinkRxTask : public Task {
                         {
                             mavlink_msg_mission_telemetry_decode(&msg_, &telemetry_);
 
-                            HAL_GPIO_TogglePin(GPIOB, LD2_Pin); // RX aktivite gostergesi
-
+                            IndicateRxActivity();
+                            
                             auto len = snprintf(telemetryMsg_.data(), telemetryMsg_.size(),
                                 "[msg %lu] MISSION_TELEMETRY t=%lu seq=%u state=%u alt=%.1f temp=%.1f press=%.1f "
                                 "gyro=(%.2f,%.2f,%.2f) accel=(%.2f,%.2f,%.2f) gps=(%ld,%ld) sats=%u\r\n",
@@ -65,14 +74,14 @@ class MavlinkRxTask : public Task {
                                 (long)telemetry_.gps_latitude,
                                 (long)telemetry_.gps_longitude,
                                 telemetry_.gps_sats);
-                            HAL_UART_Transmit(debugUart_, reinterpret_cast<const uint8_t*>(telemetryMsg_.data()), len, HAL_MAX_DELAY);
+                            debugTransport_.send(reinterpret_cast<const uint8_t*>(telemetryMsg_.data()), len);
                         }
                         else
                         {
                             auto len = snprintf(unknownMsg_.data(), unknownMsg_.size(),
                                 "[msg %lu] unknown msgid=%u (len=%u)\r\n",
                                 (unsigned long)rxCounter_, msg_.msgid, msg_.len);
-                            HAL_UART_Transmit(debugUart_, reinterpret_cast<const uint8_t*>(unknownMsg_.data()), len, HAL_MAX_DELAY);
+                            debugTransport_.send(reinterpret_cast<const uint8_t*>(unknownMsg_.data()), len);
                         }
                     }
                 }

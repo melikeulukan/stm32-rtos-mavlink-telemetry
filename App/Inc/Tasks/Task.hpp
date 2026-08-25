@@ -4,18 +4,19 @@
 
 class Task{
     public:
-        explicit Task(const char* name, uint32_t StackDepth, osPriority_t priority);
+        explicit Task(const char* name, osPriority_t priority);
         virtual ~Task() = default;
 
         Task(const Task&) = delete; //copy constructor disabled
         Task& operator=(const Task&) = delete; //copy assignment operator disabled
-
-        void start();
-
         virtual void operator()()=0; //Pure Virtual Function
+
+    protected:
+        void startDynamic(std::size_t stackBytes);
+        void startWithStack(void * stackMem, std::size_t stackBytes);
+        
     private:
         const char* name_;
-        uint32_t StackDepth_;
         osPriority_t priority_;
         osThreadId_t handle_{nullptr};
 

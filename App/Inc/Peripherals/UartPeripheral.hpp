@@ -1,12 +1,12 @@
 #pragma once
-#include "main.h"
+#include "PeripheralHandle.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <array>
 
 class UartPeripheral {
     public:
-        using HalHandle = UART_HandleTypeDef;
+        using HalHandle = PeripheralHandle;
 
         explicit UartPeripheral(HalHandle* huart);
         virtual ~UartPeripheral() = default;
@@ -25,20 +25,11 @@ class UartPeripheral {
     protected:
         HalHandle* huart_;
 
-        void transmitDma(const uint8_t* data, std::size_t len)
-        {
-            HAL_UART_Transmit_DMA(huart_, data, static_cast<uint16_t>(len));
-        }
+        void transmitDma(const uint8_t* data, std::size_t len);
 
-        void receiveDma(uint8_t* buffer, std::size_t len)
-        {
-            HAL_UARTEx_ReceiveToIdle_DMA(huart_, buffer, static_cast<uint16_t>(len));
-        }
-
-        void stopDma()
-        {
-            HAL_UART_DMAStop(huart_);
-        }
+        void receiveDma(uint8_t* buffer, std::size_t len);
+            
+        void stopDma();
 
     private:
         static constexpr std::size_t MAX_UARTS = 3;
