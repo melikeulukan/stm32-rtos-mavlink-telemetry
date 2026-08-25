@@ -10,7 +10,7 @@
 #include "task.h"
 #endif
 
-#include "Peripherals/PeripheralHandles.hpp"
+#include "PeripheralHandle.hpp"
 #include "HardwareInit.hpp"
 #include "Peripherals/UartPeripheral.hpp"
 #include "Peripherals/UartSendTransport.hpp"

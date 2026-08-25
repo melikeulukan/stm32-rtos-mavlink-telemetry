@@ -1,4 +1,4 @@
-#include "Peripherals/PeripheralHandles.hpp"
+#include "PeripheralHandle.hpp"
 #include "HardwareInit.hpp"
 
 namespace {

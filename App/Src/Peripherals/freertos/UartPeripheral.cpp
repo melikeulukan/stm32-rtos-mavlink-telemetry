@@ -1,5 +1,5 @@
 #include "Peripherals/UartPeripheral.hpp"
-#include "Peripherals/PeripheralHandles.hpp"
+#include "PeripheralHandle.hpp"
 
 UartPeripheral::UartPeripheral(HalHandle* huart) : huart_(huart)
 {

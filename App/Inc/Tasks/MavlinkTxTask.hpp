@@ -31,12 +31,15 @@ class MavlinkTxTask : public Task {
 
         }
 
+constexpr auto melike_size{256};
+
 #if defined(RTOS_BACKEND_ZEPHYR)
-        void start() { startWithStack(mavlink_tx_stack, K_THREAD_STACK_SIZEOF(mavlink_tx_stack)); }
+        void start() { startWithStack(melike_size, K_THREAD_STACK_SIZEOF(mavlink_tx_stack)); }
 #elif defined(RTOS_BACKEND_FREERTOS)
-        void start() { startDynamic(256 * sizeof(uint32_t)); }
+        void start() { startDynamic(melike_size * sizeof(uint32_t)); }
 #endif
 
+start(melike_size);
         void operator()() override {
             constexpr std::size_t kDatasetSize = std::size(dummy_dataset);
             printf("tx task running\r\n");

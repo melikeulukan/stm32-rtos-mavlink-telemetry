@@ -10,10 +10,10 @@ class DefaultTask : public Task{
 
         void operator()() override {
 
-                while(true)
-                {
-                    HAL_GPIO_TogglePin(GPIOB, LD3_Pin);
-                    osDelay(500);
-                } 
+            while(true)
+            {
+                HAL_GPIO_TogglePin(GPIOB, LD3_Pin);
+                osDelay(500);
+            } 
         };
 };

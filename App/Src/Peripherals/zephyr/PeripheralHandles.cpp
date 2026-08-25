@@ -1,4 +1,4 @@
-#include "Peripherals/PeripheralHandles.hpp"
+#include "PeripheralHandle.hpp"
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 
