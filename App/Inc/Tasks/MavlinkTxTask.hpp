@@ -41,7 +41,7 @@ class MavlinkTxTask : public Task<256 * sizeof(uint32_t)> {
                 IndicateTxActivity();
                 idx_ = (idx_ + 1) % kDatasetSize;
 
-                osDelay(1000);
+                ActiveOs::Delay(1000);
             }
         }
 

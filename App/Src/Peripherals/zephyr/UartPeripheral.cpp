@@ -45,3 +45,11 @@ void UartPeripheral::stopDma()
     uart_tx_abort(huart_);
     uart_rx_disable(huart_);
 }
+
+void UartPeripheral::transmitBlocking(std::span<const uint8_t> data)
+{
+    for (auto byte : data)
+    {
+        uart_poll_out(huart_, byte);
+    }
+}

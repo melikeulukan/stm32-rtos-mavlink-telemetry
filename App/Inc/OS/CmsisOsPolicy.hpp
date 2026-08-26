@@ -15,6 +15,10 @@
 struct CmsisOsPolicy {
     using ThreadHandle = osThreadId_t;
     using Priority = osPriority_t;
+    using SemaphoreHandle = osSemaphoreId_t;
+    using QueueHandle = osMessageQueueId_t;
+
+    static constexpr uint32_t WaitForever = osWaitForever;
 
     template<std::size_t StackBytes>
     [[nodiscard]] static ThreadHandle CreateThread(const char* name, Priority prio,
@@ -57,5 +61,40 @@ struct CmsisOsPolicy {
 #if defined(RTOS_BACKEND_FREERTOS)
         osKernelStart();
 #endif
+    }
+
+    static void Delay(uint32_t ticks)
+    {
+        osDelay(ticks);
+    }
+
+    [[nodiscard]] static SemaphoreHandle CreateSemaphore(uint32_t maxCount, uint32_t initialCount)
+    {
+        return osSemaphoreNew(maxCount, initialCount, nullptr);
+    }
+
+    static void AcquireSemaphore(SemaphoreHandle sem, uint32_t timeout)
+    {
+        osSemaphoreAcquire(sem, timeout);
+    }
+
+    static void ReleaseSemaphore(SemaphoreHandle sem)
+    {
+        osSemaphoreRelease(sem);
+    }
+
+    [[nodiscard]] static QueueHandle CreateMessageQueue(uint32_t msgCount, uint32_t msgSize)
+    {
+        return osMessageQueueNew(msgCount, msgSize, nullptr);
+    }
+
+    static void QueuePut(QueueHandle queue, const void* msg)
+    {
+        osMessageQueuePut(queue, msg, 0, 0);
+    }
+
+    static void QueueGet(QueueHandle queue, void* msg, uint32_t timeout)
+    {
+        osMessageQueueGet(queue, msg, nullptr, timeout);
     }
 };

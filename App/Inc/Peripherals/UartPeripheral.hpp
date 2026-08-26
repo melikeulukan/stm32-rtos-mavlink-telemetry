@@ -32,6 +32,8 @@ class UartPeripheral {
 
         void stopDma();
 
+        void transmitBlocking(std::span<const uint8_t> data);
+
     private:
         static constexpr std::size_t MAX_UARTS = 3;
         static inline std::array<UartPeripheral*, MAX_UARTS> table_{};

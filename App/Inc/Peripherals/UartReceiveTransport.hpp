@@ -1,6 +1,6 @@
 #pragma once
 #include "UartPeripheral.hpp"
-#include "cmsis_os2.h"
+#include "Os/ActiveOs.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -12,7 +12,7 @@ using Buffer = std::array<std::uint8_t, N>;
 
 class UartReceiveTransport : public UartPeripheral {
     public:
-        UartReceiveTransport(UartPeripheral::HalHandle* huart, osMessageQueueId_t rxQueue)
+        UartReceiveTransport(UartPeripheral::HalHandle* huart, ActiveOs::QueueHandle rxQueue)
             : UartPeripheral(huart), rxQueue_(rxQueue) {
         }
 
@@ -25,7 +25,7 @@ class UartReceiveTransport : public UartPeripheral {
         // Bir sonraki paket gelene kadar bloklar.
         const uint8_t* receive(uint16_t& outLen)
         {
-            osMessageQueueGet(rxQueue_, &outLen, nullptr, osWaitForever);
+            ActiveOs::QueueGet(rxQueue_, &outLen, ActiveOs::WaitForever);
             return packet_.data();
         }
 
@@ -42,12 +42,12 @@ class UartReceiveTransport : public UartPeripheral {
             memcpy(packet_.data(), dmaBuffer_.data(), size);
             packet_[size] = '\0';
 
-            osMessageQueuePut(rxQueue_, &size, 0, 0);
+            ActiveOs::QueuePut(rxQueue_, &size);
 
             receiveDma(dmaBuffer_);
         }
 
-        osMessageQueueId_t rxQueue_;
+        ActiveOs::QueueHandle rxQueue_;
         Buffer<128> dmaBuffer_{};
         Buffer<128> packet_{};
 };

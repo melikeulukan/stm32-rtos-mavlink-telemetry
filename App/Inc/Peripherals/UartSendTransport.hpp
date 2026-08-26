@@ -1,26 +1,26 @@
 #pragma once
 #include "UartPeripheral.hpp"
-#include "cmsis_os2.h"
+#include "Os/ActiveOs.hpp"
 #include <cstddef>
 #include <span>
 
 class UartSendTransport : public UartPeripheral {
     public:
-        UartSendTransport(UartPeripheral::HalHandle* huart, osSemaphoreId_t txDoneSem)
+        UartSendTransport(UartPeripheral::HalHandle* huart, ActiveOs::SemaphoreHandle txDoneSem)
             : UartPeripheral(huart), txDoneSem_(txDoneSem) {
         }
 
         void send(std::span<const uint8_t> data)
         {
             transmitDma(data);
-            osSemaphoreAcquire(txDoneSem_, osWaitForever);
+            ActiveOs::AcquireSemaphore(txDoneSem_, ActiveOs::WaitForever);
         }
 
     private:
         void onTxComplete() override
         {
-            osSemaphoreRelease(txDoneSem_);
+            ActiveOs::ReleaseSemaphore(txDoneSem_);
         }
 
-        osSemaphoreId_t txDoneSem_;
+        ActiveOs::SemaphoreHandle txDoneSem_;
 };

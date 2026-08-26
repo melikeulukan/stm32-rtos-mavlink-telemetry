@@ -77,7 +77,7 @@ class MavlinkRxTask : public Task<512 * sizeof(uint32_t)> {
                     }
                 }
 
-                osDelay(10);
+                ActiveOs::Delay(10);
             }
         };
 

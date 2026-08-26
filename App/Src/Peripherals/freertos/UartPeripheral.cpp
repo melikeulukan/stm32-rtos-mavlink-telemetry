@@ -1,5 +1,6 @@
 #include "Peripherals/UartPeripheral.hpp"
 #include "PeripheralHandle.hpp"
+#include <array>
 
 UartPeripheral::UartPeripheral(HalHandle* huart) : huart_(huart)
 {
@@ -28,7 +29,7 @@ UartPeripheral* UartPeripheral::find(HalHandle* huart)
 namespace {
 UartPeripheral* findByRawHandle(UART_HandleTypeDef* rawHuart)
 {
-    PeripheralHandle* candidates[] = { GetUart1Handle(), GetUart2Handle(), GetUart3Handle() };
+    std::array<PeripheralHandle*, 3> candidates = { GetUart1Handle(), GetUart2Handle(), GetUart3Handle() };
     for (auto* candidate : candidates)
     {
         if (candidate->huart == rawHuart)
@@ -70,4 +71,9 @@ void UartPeripheral::receiveDma(std::span<uint8_t> buffer)
 void UartPeripheral::stopDma()
 {
     HAL_UART_DMAStop(huart_->huart);
+}
+
+void UartPeripheral::transmitBlocking(std::span<const uint8_t> data)
+{
+    HAL_UART_Transmit(huart_->huart, data.data(), static_cast<uint16_t>(data.size()), HAL_MAX_DELAY);
 }
