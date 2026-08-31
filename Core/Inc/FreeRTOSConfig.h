@@ -98,6 +98,7 @@ to exclude the API function. */
 #define INCLUDE_xQueueGetMutexHolder        1
 #define INCLUDE_uxTaskGetStackHighWaterMark 1
 #define INCLUDE_eTaskGetState               1
+#define INCLUDE_xTaskAbortDelay             1
 
 /*
  * The CMSIS-RTOS V2 FreeRTOS wrapper is dependent on the heap implementation used
@@ -141,9 +142,9 @@ standard names. */
 #define vPortSVCHandler    SVC_Handler
 #define xPortPendSVHandler PendSV_Handler
 
-/* IMPORTANT: This define is commented when used with STM32Cube firmware, when the timebase source is SysTick,
-              to prevent overwriting SysTick_Handler defined within STM32Cube HAL */
-#define xPortSysTickHandler SysTick_Handler
+/* xPortSysTickHandler is intentionally NOT renamed to SysTick_Handler here:
+   the CMSIS-FreeRTOS wrapper (cmsis_os2.c) now owns SysTick_Handler itself
+   and calls xPortSysTickHandler() internally. */
 
 /* USER CODE BEGIN Defines */
 /* Section where parameter definitions can be added (for instance, to override default ones in FreeRTOS.h) */

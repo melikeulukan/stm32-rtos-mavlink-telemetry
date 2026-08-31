@@ -30,6 +30,31 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   }
 }
 
+// configSUPPORT_STATIC_ALLOCATION=1 olduğu icin FreeRTOS-Kernel, kendi Idle ve
+// Timer task'lari icin statik bellegi uygulamadan istiyor (eski ST wrapper'i
+// bunlari kendi icinde sagliyordu, yeni ARM upstream wrapper'i saglamiyor).
+static StaticTask_t xIdleTaskTCBBuffer;
+static StackType_t xIdleTaskStackBuffer[configMINIMAL_STACK_SIZE];
+
+extern "C" void vApplicationGetIdleTaskMemory(StaticTask_t** ppxIdleTaskTCBBuffer,
+    StackType_t** ppxIdleTaskStackBuffer, uint32_t* pulIdleTaskStackSize)
+{
+  *ppxIdleTaskTCBBuffer = &xIdleTaskTCBBuffer;
+  *ppxIdleTaskStackBuffer = xIdleTaskStackBuffer;
+  *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
+}
+
+static StaticTask_t xTimerTaskTCBBuffer;
+static StackType_t xTimerTaskStackBuffer[configTIMER_TASK_STACK_DEPTH];
+
+extern "C" void vApplicationGetTimerTaskMemory(StaticTask_t** ppxTimerTaskTCBBuffer,
+    StackType_t** ppxTimerTaskStackBuffer, uint32_t* pulTimerTaskStackSize)
+{
+  *ppxTimerTaskTCBBuffer = &xTimerTaskTCBBuffer;
+  *ppxTimerTaskStackBuffer = xTimerTaskStackBuffer;
+  *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
+}
+
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
