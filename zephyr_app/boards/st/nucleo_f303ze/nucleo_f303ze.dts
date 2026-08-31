@@ -1,0 +1,96 @@
+/*
+ * Copyright (c) 2020 Paul M. Bendixen
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+#include <st/f3/stm32f303Xe.dtsi>
+#include <st/f3/stm32f303z(d-e)tx-pinctrl.dtsi>
+
+/ {
+	model = "STMicroelectronics STM32F303ZE-NUCLEO board";
+	compatible = "st,stm32f303ze-nucleo";
+
+	chosen {
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+		zephyr,console = &usart3;
+		zephyr,shell-uart = &usart3;
+	};
+
+	leds: leds {
+		compatible = "gpio-leds";
+
+		green_led: led_0 {
+			gpios = <&gpiob 0 GPIO_ACTIVE_HIGH>;
+			label = "User LD1";
+		};
+
+		blue_led: led_1 {
+			gpios = <&gpiob 7 GPIO_ACTIVE_HIGH>;
+			label = "User LD2";
+		};
+	};
+
+	aliases {
+		led0 = &green_led;
+		led1 = &blue_led;
+	};
+
+	aliases {
+		led0 = &green_led;
+	};
+
+};
+
+&clk_hse {
+    hse-bypass;
+    clock-frequency = <DT_FREQ_M(8)>;
+    status = "okay";
+};
+
+&pll {
+    prediv = <1>;
+    mul = <9>;
+    clocks = <&clk_hse>;
+    status = "okay";
+};
+
+&rcc {
+    clocks = <&pll>;
+    clock-frequency = <DT_FREQ_M(72)>;
+    ahb-prescaler = <1>;
+    apb1-prescaler = <2>;
+    apb2-prescaler = <1>;
+};
+
+&dma1 {
+    status = "okay";
+};
+
+&usart1 {
+	pinctrl-0 = <&usart1_tx_pa9 &usart1_rx_pc5>;
+	pinctrl-names = "default";
+	current-speed = <115200>;
+	dmas = <&dma1 4 STM32_DMA_PERIPH_TX>;
+	dma-names = "tx";
+	status = "okay";
+};
+
+&usart2 {
+	pinctrl-0 = <&usart2_tx_pd5 &usart2_rx_pd6>;
+	pinctrl-names = "default";
+	current-speed = <115200>;
+	dmas = <&dma1 7 STM32_DMA_PERIPH_TX>,
+	       <&dma1 6 STM32_DMA_PERIPH_RX>;
+	dma-names = "tx", "rx";
+	status = "okay";
+};
+
+&usart3 {
+    pinctrl-0 = <&usart3_tx_pd8 &usart3_rx_pd9>;
+    pinctrl-names = "default";
+    current-speed = <115200>;
+    status = "okay";
+};
