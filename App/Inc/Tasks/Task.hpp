@@ -7,8 +7,8 @@ template<std::size_t StackBytes>
 
 class Task{
     public:
-        explicit Task(const char* name, ActiveOs::Priority priority)
-            : name_(name), priority_(priority){
+        explicit Task(const char* name, TaskPriority priority)
+            : name_(name), priority_(ActiveOs::ToNativePriority(priority)){
         }
         virtual ~Task() = default;
 

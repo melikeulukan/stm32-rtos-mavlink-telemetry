@@ -12,6 +12,14 @@
 #include "task.h"
 #endif
 
+
+enum class TaskPriority
+{
+    Low,
+    Normal,
+    AboveNormal
+};
+
 struct CmsisOsPolicy {
     using ThreadHandle = osThreadId_t;
     using Priority = osPriority_t;
@@ -19,6 +27,21 @@ struct CmsisOsPolicy {
     using QueueHandle = osMessageQueueId_t;
 
     static constexpr uint32_t WaitForever = osWaitForever;
+
+    [[nodiscard]] static Priority ToNativePriority(TaskPriority priority)
+    {
+        switch (priority)
+        {
+            using enum TaskPriority;
+            case Low:         
+                return osPriorityLow;
+            case Normal:      
+                return osPriorityNormal;
+            case AboveNormal: 
+                return osPriorityAboveNormal;
+        }
+        return osPriorityNormal;
+    }
 
     template<std::size_t StackBytes>
     [[nodiscard]] static ThreadHandle CreateThread(const char* name, Priority prio,

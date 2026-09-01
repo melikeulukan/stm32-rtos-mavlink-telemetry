@@ -3,6 +3,7 @@
 #include "DebugLeds.hpp"
 #include "mavlink/custom/mavlink.h"
 #include "mavlink/custom/mavlink_msg_mission_telemetry.h"
+#include "Watchdog/Watchdog.hpp"
 #include <cstdio>
 #include <array>
 #include <span>
@@ -23,7 +24,7 @@ class MavlinkRxTask : public Task<512 * sizeof(uint32_t)> {
 
     public:
         explicit MavlinkRxTask(Transport& transport, DebugTransport& debugTransport)
-            : Base("MavlinkRxTask", osPriorityAboveNormal), transport_(transport), debugTransport_(debugTransport) {
+            : Base("MavlinkRxTask", TaskPriority::AboveNormal), transport_(transport), debugTransport_(debugTransport) {
 
         }
 
@@ -31,6 +32,7 @@ class MavlinkRxTask : public Task<512 * sizeof(uint32_t)> {
 
             while (true)
             {
+                Watchdog::KickTask(Watchdog::TaskId::MavlinkRx);
                 uint16_t receivedLen;
                 const uint8_t* packet = transport_.receive(receivedLen);
 

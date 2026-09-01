@@ -9,6 +9,7 @@
 #include "mavlink/custom/mavlink_msg_mission_telemetry.h"
 #include "mavlink/mavlink_types.h"
 #include "MavlinkDummyData.hpp"
+#include "Watchdog/Watchdog.hpp"
 
 template<typename Transport>
 
@@ -24,16 +25,15 @@ class MavlinkTxTask : public Task<256 * sizeof(uint32_t)> {
 
     public:
         explicit MavlinkTxTask(Transport& transport)
-            : Base("MavlinkTxTask", osPriorityNormal), transport_(transport){
-
+            : Base("MavlinkTxTask", TaskPriority::Normal), transport_(transport){
         }
-
 
         void operator()() override {
             constexpr std::size_t kDatasetSize = std::size(dummy_dataset);
             printf("tx task running\r\n");
 
             while (true) {
+                Watchdog::KickTask(Watchdog::TaskId::MavlinkTx);
                 mavlink_msg_mission_telemetry_encode(kSystemId, kComponentId, &msg_, &dummy_dataset[idx_]);
                 auto len = mavlink_msg_to_send_buffer(mavBuf_.data(), &msg_);
                 transport_.send(std::span<const uint8_t>(mavBuf_.data(), len));
