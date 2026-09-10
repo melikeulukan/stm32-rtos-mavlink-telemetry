@@ -43,15 +43,6 @@ int main(void)
   printf("rx task started\r\n");
 
   Watchdog::Init();
-
-#if defined(RTOS_BACKEND_FREERTOS)
-  char iwdgMsg[64];
-  int iwdgMsgLen = snprintf(iwdgMsg, sizeof(iwdgMsg),
-      "IWDG regs: PR=%lu RLR=%lu SR=%lu\r\n",
-      (unsigned long)IWDG->PR, (unsigned long)IWDG->RLR, (unsigned long)IWDG->SR);
-  debugUart.send(std::span<const uint8_t>(reinterpret_cast<const uint8_t*>(iwdgMsg), iwdgMsgLen));
-#endif
-
   watchdogTask.start();
 
   ActiveOs::StartKernel();
